@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZULE AI Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ZULE AI RECAPTCHA ADMIN</h1>
+            <div id="status-indicator" class="status-online">ONLINE</div>
+        </header>
+
+        <div class="grid">
+            <!-- Stats Cards -->
+            <div class="card stat-card">
+                <h3>TOTAL PROCESSED</h3>
+                <p id="stat-total">0</p>
+            </div>
+            <div class="card stat-card">
+                <h3>ACCURACY</h3>
+                <p id="stat-accuracy">0%</p>
+            </div>
+            <div class="card stat-card">
+                <h3>CORRECT</h3>
+                <p id="stat-correct">0</p>
+            </div>
+             <div class="card stat-card">
+                <h3>INCORRECT</h3>
+                <p id="stat-incorrect">0</p>
+            </div>
+
+            <!-- Graph -->
+            <div class="card full-width">
+                <h3>24H PERFORMANCE</h3>
+                <canvas id="accuracyChart"></canvas>
+            </div>
+
+            <!-- Recent Logs -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h3>RECENT ACTIVITY</h3>
+                    <button onclick="clearLogs()" class="btn-danger">CLEAR LOGS</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>TIME</th>
+                            <th>FILE</th>
+                            <th>SCORE</th>
+                            <th>RESULT</th>
+                            <th>IP</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table">
+                        <!-- Logs injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

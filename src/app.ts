@@ -1,0 +1,47 @@
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import CONFIG from '@/config/default';
+import logger from '@/utils/logger';
+import routes from '@/routes/recaptcha.routes';
+import adminRoutes from '@/routes/admin.routes';
+import controller from '@/controllers/recaptcha.controller';
+import connectDB from '@/config/db';
+
+// Express App
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json()); // Support JSON for admin API
+app.use('/model', express.static(CONFIG.PATHS.MODEL_DIR));
+
+// Serve Admin Dashboard
+app.use('/admin', express.static(path.join(CONFIG.PATHS.ROOT, 'public/admin')));
+
+// Routes
+app.use('/', routes);
+app.use('/api/admin', adminRoutes);
+
+// Server Controller
+const server = {
+    app,
+    start: async (): Promise<void> => {
+        // 1. Connect Database
+        await connectDB();
+
+        // 2. Initialize Model
+        await controller.initModel();
+
+        // 3. Listen
+        return new Promise((resolve) => {
+            app.listen(CONFIG.PORT, () => {
+                logger.info(`Server running on http://localhost:${CONFIG.PORT}`);
+                logger.info(`Admin Dashboard: http://localhost:${CONFIG.PORT}/admin`);
+                resolve();
+            });
+        });
+    },
+};
+
+export default server;

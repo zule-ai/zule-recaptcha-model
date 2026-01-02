@@ -1,22 +1,61 @@
 {
-  "name": "recaptcha-ai",
+  "name": "zule-recaptcha-classifier",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "CNN-based classification model for Twitter reCAPTCHA challenges, powered by TensorFlow.js.",
+  "main": "dist/scripts/start.js",
   "scripts": {
-    "start": "node server.js",
-    "train": "node train.js",
-    "dev": "nodemon server.js"
+    "start": "ts-node -r tsconfig-paths/register src/scripts/start.ts",
+    "train": "ts-node -r tsconfig-paths/register src/scripts/train.ts",
+    "build": "tsc && tsc-alias",
+    "serve": "node dist/scripts/start.js",
+    "dev": "nodemon --exec ts-node -r tsconfig-paths/register src/scripts/start.ts",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write \"src/**/*.ts\""
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zule-ai/recaptcha-classifier.git"
+  },
+  "keywords": [
+    "tensorflow.js",
+    "recaptcha",
+    "machine-learning",
+    "classification",
+    "automation",
+    "zule-ai",
+    "typescript"
+  ],
+  "author": "ZULE AI <support@zuleai.xyz>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zule-ai/recaptcha-classifier/issues"
+  },
+  "homepage": "https://github.com/zule-ai/recaptcha-classifier#readme",
   "dependencies": {
     "@tensorflow/tfjs": "^4.22.0",
+    "@tensorflow/tfjs-node": "^4.22.0",
     "canvas": "^3.1.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "express": "^5.1.0",
+    "mongoose": "^9.1.1",
     "multer": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.11",
+    "@types/node": "^20.11.25",
+    "eslint": "^8.57.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.1.1",
+    "nodemon": "^3.1.0",
+    "prettier": "^3.2.5",
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.3.3"
   }
 }
