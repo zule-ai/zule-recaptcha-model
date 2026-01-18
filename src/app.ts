@@ -18,6 +18,7 @@ app.use('/model', express.static(CONFIG.PATHS.MODEL_DIR));
 
 // Serve Admin Dashboard
 app.use('/admin', express.static(path.join(CONFIG.PATHS.ROOT, 'public/admin')));
+app.use('/uploads', express.static(path.join(CONFIG.PATHS.ROOT, 'public/uploads')));
 
 // Routes
 app.use('/', routes);

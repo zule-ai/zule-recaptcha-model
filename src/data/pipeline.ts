@@ -9,7 +9,7 @@ export function augmentTensor(tensor: tf.Tensor3D): tf.Tensor3D[] {
     return tf.tidy(() => {
         const augmented: tf.Tensor3D[] = [];
 
-        // 1. Original
+        // 1. Original\
         augmented.push(tensor.clone());
 
         // 2. Brightness variation

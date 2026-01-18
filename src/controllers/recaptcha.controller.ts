@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import * as tf from '@tensorflow/tfjs';
 import { createCanvas, loadImage } from 'canvas';
 import CONFIG from '@/config/default';
@@ -68,10 +69,23 @@ const RecaptchaController = {
                     };
                     results.push(result);
 
+                    // Move file to public/uploads/predictions instead of deleting
+                    const uploadsDir = path.join(CONFIG.PATHS.ROOT, 'public/uploads/predictions');
+                    if (!fs.existsSync(uploadsDir)) {
+                        fs.mkdirSync(uploadsDir, { recursive: true });
+                    }
+
+                    const savedFilename = `${Date.now()}_${file.originalname}`;
+                    const targetPath = path.join(uploadsDir, savedFilename);
+                    fs.renameSync(file.path, targetPath);
+
+                    const publicPath = `/uploads/predictions/${savedFilename}`;
+
                     // Log to DB
                     try {
                         await Prediction.create({
                             filename: result.filename,
+                            imageUrl: publicPath,
                             score: parseFloat(result.score),
                             classification: result.classification,
                             ip: req.ip,
@@ -80,20 +94,17 @@ const RecaptchaController = {
                     } catch (dbErr: any) {
                         logger.error('Failed to log prediction to DB:', dbErr.message);
                     }
-
                 } catch (innerErr: any) {
                     logger.error(`Error processing file ${file.originalname}:`, innerErr);
                     results.push({
                         filename: file.originalname,
                         error: 'Processing failed'
                     });
-                } finally {
-                    // Clean up temp file
+
+                    // Cleanup on error
                     try {
-                        fs.unlinkSync(file.path);
-                    } catch (e) {
-                        // ignore cleanup errors
-                    }
+                        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+                    } catch (e) { }
                 }
             }
 

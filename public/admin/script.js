@@ -1,15 +1,39 @@
 const API_URL = '/api/admin';
+let currentRange = '24h';
 
 async function fetchStats() {
     try {
-        const res = await fetch(`${API_URL}/stats`);
+        const res = await fetch(`${API_URL}/stats?range=${currentRange}`);
         const data = await res.json();
 
         // Update Stats
         document.getElementById('stat-total').innerText = data.stats.total;
         document.getElementById('stat-accuracy').innerText = data.stats.accuracy + '%';
-        document.getElementById('stat-correct').innerText = data.stats.correct;
-        document.getElementById('stat-incorrect').innerText = data.stats.incorrect;
+        document.getElementById('stat-confidence').innerText = data.stats.avgConfidence;
+
+        // Update System
+        document.getElementById('sys-mem').innerText = `MEM: ${data.system.memory}`;
+        document.getElementById('sys-uptime').innerText = `UPTIME: ${data.system.uptime}`;
+
+        // Update Top IPs
+        const ipList = document.getElementById('top-ips-list');
+        ipList.innerHTML = data.topIPs.length > 0
+            ? data.topIPs.map(ip => `<div>${ip._id} (${ip.count})</div>`).join('')
+            : '-';
+
+        // Update Gallery
+        const gallery = document.getElementById('image-gallery');
+        const imagesWithUrl = data.recent.filter(log => log.imageUrl);
+        gallery.innerHTML = imagesWithUrl.length > 0
+            ? imagesWithUrl.map(log => `
+                <div class="gallery-item" title="${log.filename} | Score: ${log.score}">
+                    <img src="${log.imageUrl}" alt="prediction">
+                    <div class="gallery-badge ${log.classification === 'CORRECT' ? 'status-valid' : 'status-invalid'}">
+                        ${log.classification}
+                    </div>
+                </div>
+            `).join('')
+            : '<p style="color:#444; font-size: 0.8rem;">No images stored yet.</p>';
 
         // Update Logs
         const tbody = document.getElementById('logs-table');
@@ -33,12 +57,21 @@ async function fetchStats() {
     }
 }
 
+function changeRange() {
+    currentRange = document.getElementById('range-selector').value;
+    fetchStats();
+}
+
 let chart;
 function updateChart(graphData) {
     const ctx = document.getElementById('accuracyChart').getContext('2d');
 
-    // Process data: array of 24h keys
-    const labels = graphData.map(d => `${d._id}:00`);
+    const labels = graphData.map(d => {
+        const dt = new Date(d._id);
+        return currentRange === '1h'
+            ? dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : dt.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit' });
+    });
     const counts = graphData.map(d => d.count);
     const accuracy = graphData.map(d => d.count > 0 ? (d.correct / d.count) * 100 : 0);
 
@@ -70,6 +103,7 @@ function updateChart(graphData) {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: { legend: { labels: { color: '#ccc' } } },
             scales: {
@@ -90,12 +124,11 @@ function updateChart(graphData) {
 }
 
 async function clearLogs() {
-    if (confirm('Are you sure you want to clear all logs?')) {
+    if (confirm('Are you sure you want to clear all data and images?')) {
         await fetch(`${API_URL}/logs`, { method: 'DELETE' });
         fetchStats();
     }
 }
 
-// Poll every 5 seconds
 setInterval(fetchStats, 5000);
 fetchStats();

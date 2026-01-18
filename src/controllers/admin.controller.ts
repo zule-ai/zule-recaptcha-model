@@ -5,21 +5,43 @@ import logger from '@/utils/logger';
 const AdminController = {
     getStats: async (req: Request, res: Response) => {
         try {
-            const total = await Prediction.countDocuments();
-            const correct = await Prediction.countDocuments({ classification: 'CORRECT' });
-            const incorrect = await Prediction.countDocuments({ classification: 'INCORRECT' });
-
-            const recent = await Prediction.find().sort({ timestamp: -1 }).limit(10);
-
-            // Group by hours for graph (last 24h)
+            const range = req.query.range || '24h';
+            let timeFilter = {};
             const now = new Date();
-            const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
+            if (range === '1h') timeFilter = { timestamp: { $gte: new Date(now.getTime() - 60 * 60 * 1000) } };
+            else if (range === '24h') timeFilter = { timestamp: { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) } };
+            else if (range === '7d') timeFilter = { timestamp: { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) } };
+
+            const total = await Prediction.countDocuments(timeFilter);
+            const correct = await Prediction.countDocuments({ ...timeFilter, classification: 'CORRECT' });
+            const incorrect = await Prediction.countDocuments({ ...timeFilter, classification: 'INCORRECT' });
+
+            // Average confidence
+            const avgConfidenceResult = await Prediction.aggregate([
+                { $match: timeFilter },
+                { $group: { _id: null, avgScore: { $avg: "$score" } } }
+            ]);
+            const avgConfidence = avgConfidenceResult.length > 0 ? avgConfidenceResult[0].avgScore : 0;
+
+            // Top IPs
+            const topIPs = await Prediction.aggregate([
+                { $match: timeFilter },
+                { $group: { _id: "$ip", count: { $sum: 1 } } },
+                { $sort: { count: -1 } },
+                { $limit: 5 }
+            ]);
+
+            const recent = await Prediction.find(timeFilter).sort({ timestamp: -1 }).limit(10);
+
+            // Group by hours for graph
             const hourlyStats = await Prediction.aggregate([
-                { $match: { timestamp: { $gte: yesterday } } },
+                { $match: timeFilter },
                 {
                     $group: {
-                        _id: { $hour: "$timestamp" },
+                        _id: {
+                            $dateToString: { format: "%Y-%m-%d %H:00", date: "$timestamp" }
+                        },
                         count: { $sum: 1 },
                         correct: {
                             $sum: { $cond: [{ $eq: ["$classification", "CORRECT"] }, 1, 0] }
@@ -34,8 +56,14 @@ const AdminController = {
                     total,
                     correct,
                     incorrect,
-                    accuracy: total > 0 ? ((correct / total) * 100).toFixed(2) : 0
+                    accuracy: total > 0 ? ((correct / total) * 100).toFixed(2) : 0,
+                    avgConfidence: avgConfidence.toFixed(4)
                 },
+                system: {
+                    memory: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2) + ' MB',
+                    uptime: Math.floor(process.uptime()) + 's'
+                },
+                topIPs,
                 recent,
                 graph: hourlyStats
             });
