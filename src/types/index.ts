@@ -17,6 +17,7 @@ export interface ConfigType {
         DATA_INCORRECT: string;
         MODEL_DIR: string;
         MODEL_FILE: string;
+        DEBUG_DIR: string;
     };
 }
 
@@ -31,4 +32,21 @@ export interface Dataset {
     xs: tf.Tensor;
     ys: tf.Tensor;
     samples: Sample[];
+}
+
+export interface IHistoryItem {
+    sender: 'user' | 'assistant';
+    content: string;
+}
+
+export interface IMediaPart {
+    type?: 'image_url' | 'text';
+    text?: string;
+    inline_data?: {
+        mime_type: string;
+        data: string;
+    };
+    image_url?: {
+        url: string;
+    };
 }

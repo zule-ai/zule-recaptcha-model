@@ -32,6 +32,7 @@ const CONFIG: ConfigType = {
         DATA_INCORRECT: path.join(ROOT_DIR, 'data', 'incorrect'),
         MODEL_DIR: path.join(ROOT_DIR, 'model'),
         MODEL_FILE: path.join(ROOT_DIR, 'model', 'model.json'),
+        DEBUG_DIR: path.join(ROOT_DIR, 'public', 'debug'),
     }
 };
 

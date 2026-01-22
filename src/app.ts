@@ -7,6 +7,8 @@ import routes from '@/routes/recaptcha.routes';
 import adminRoutes from '@/routes/admin.routes';
 import controller from '@/controllers/recaptcha.controller';
 import connectDB from '@/config/db';
+import reporterService from '@/services/reporter.service';
+import http from 'http';
 
 // Express App
 const app = express();
@@ -18,6 +20,8 @@ app.use('/model', express.static(CONFIG.PATHS.MODEL_DIR));
 
 // Serve Admin Dashboard
 app.use('/admin', express.static(path.join(CONFIG.PATHS.ROOT, 'public/admin')));
+app.use('/zule', express.static(path.join(CONFIG.PATHS.ROOT, 'public/zule')));
+app.use('/debug', express.static(CONFIG.PATHS.DEBUG_DIR));
 app.use('/uploads', express.static(path.join(CONFIG.PATHS.ROOT, 'public/uploads')));
 
 // Routes
@@ -34,11 +38,16 @@ const server = {
         // 2. Initialize Model
         await controller.initModel();
 
-        // 3. Listen
+        // 3. Create HTTP Server for Socket.io
+        const httpServer = http.createServer(app);
+        reporterService.init(httpServer);
+
+        // 4. Listen
         return new Promise((resolve) => {
-            app.listen(CONFIG.PORT, () => {
+            httpServer.listen(CONFIG.PORT, () => {
                 logger.info(`Server running on http://localhost:${CONFIG.PORT}`);
                 logger.info(`Admin Dashboard: http://localhost:${CONFIG.PORT}/admin`);
+                logger.info(`Zule Dashboard: http://localhost:${CONFIG.PORT}/zule`);
                 resolve();
             });
         });
